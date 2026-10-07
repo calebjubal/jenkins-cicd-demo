@@ -1,0 +1,13 @@
+{
+  "name": "jenkins-cicd-demo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node --check app.js && node --check test.js && node --check deploy.js",
+    "test": "node --test test.js",
+    "start": "node app.js",
+    "deploy": "node deploy.js"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": { "express": "^5.1.0" }
+}
