@@ -1,31 +1,73 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
+name: Hello CI/CD
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Serialize runs so deployments do not overlap; allow an active run to finish.
+concurrency:
+  group: hello-cicd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build:
-
+  build-test:
+    name: Checkout → Build → Test
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x, 22.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
-
+    timeout-minutes: 15
     steps:
-    - uses: actions/checkout@v4
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm ci
-    - run: npm run build --if-present
-    - run: npm test
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+      - name: Test
+        run: npm test
+      - name: Failure
+        if: failure()
+        run: echo 'Pipeline failed. Inspect the build and test logs.'
+
+  deploy:
+    name: Deploy
+    needs: build-test
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # Assign this label to ONE persistent deployment host with local Docker.
+    runs-on: [self-hosted, cicd-demo]
+    timeout-minutes: 15
+    concurrency:
+      group: hello-cicd-deployment
+      cancel-in-progress: false
+    env:
+      BUILD_NUMBER: ${{ github.run_number }}-${{ github.run_attempt }}
+    steps:
+      - name: Checkout tested revision
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - name: Deploy
+        run: npm run deploy
+      - name: Success
+        if: success()
+        run: echo 'CI/CD Pipeline completed successfully; deployment health verified.'
+      - name: Failure
+        if: failure()
+        run: echo 'Pipeline failed. Inspect the deployment logs.'

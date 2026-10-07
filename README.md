@@ -40,6 +40,14 @@ Polling needs no public Jenkins endpoint. For webhooks instead, configure the Je
 
 Express needs no compilation. Failed builds or tests prevent deployment. `post` prints success/failure messages; concurrent builds are disabled to avoid overlapping deployments from this job. Windows agents use `bat`; Unix agents use `sh`.
 
+## GitHub Actions equivalent
+
+`.github/workflows/node.js.yml` runs Checkout → Build → Test on pushes and pull requests to `main`, with manual runs also available. Successful pushes/manual runs on `main` then run Deploy using the same `npm run deploy` command and success/failure messages. Pull requests never deploy. Push events replace Jenkins SCM polling.
+
+Register a current self-hosted GitHub Actions runner under **Repository Settings → Actions → Runners → New self-hosted runner** on your persistent deployment machine. Give exactly one runner the custom label `cicd-demo`, install Docker with Linux containers, and allow the runner account to use the local Docker engine. Port 3000 must be free. The workflow sets up Node.js 24; its actions require an up-to-date runner. Without this runner, Deploy remains queued. The app runs at `http://localhost:3000` on that machine, not on GitHub's website; remote access uses the machine's address and network configuration.
+
+Build/test runs on a GitHub-hosted runner; Deploy checks out the same tested commit on the self-hosted machine and builds its Docker image. Workflow runs and deployments are serialized. If Jenkins also deploys this repository, enable only one deployment system for this host because the two systems share the same container and port.
+
 ## Evidence checklist
 Save real screenshots with captions and build numbers:
 
