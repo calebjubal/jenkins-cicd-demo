@@ -48,8 +48,23 @@ Register a current self-hosted GitHub Actions runner under **Repository Settings
 
 Build/test runs on a GitHub-hosted runner; Deploy checks out the same tested commit on the self-hosted machine and builds its Docker image. Workflow runs and deployments are serialized. If Jenkins also deploys this repository, enable only one deployment system for this host because the two systems share the same container and port.
 
-## Evidence checklist
-Save real screenshots with captions and build numbers:
+## Recorded execution evidence
+
+The supplied screenshots document GitHub Actions runs. The initial Node.js CI run #1 passed its Node 18.x, 20.x, and 22.x jobs. The updated Hello CI/CD run #2 was automatically triggered by pushing `f061033` to `main`; Checkout → Build → Test passed in 12 seconds. Deploy was queued waiting for a runner with labels `self-hosted, cicd-demo` at capture time. Deployment success and Jenkins execution are not shown by these images.
+
+| Evidence | What it shows |
+| --- | --- |
+| [Initial CI run](docs/ci.png) | Successful original matrix jobs and completed install/build/test steps |
+| [Updated workflow](docs/workflow.png) | Push trigger, commit `f061033`, successful CI, and queued Deploy |
+| [Deployment job](docs/deploy.png) | Deployment condition passed; waiting for an eligible self-hosted runner |
+
+![Updated GitHub Actions run with successful CI and queued deployment](docs/workflow.png)
+
+See the [workflow report](docs/workflow-report.md) for all three screenshots, captions, execution results, observations, and commit history.
+
+## Additional evidence to complete the demonstration
+
+Bring the `cicd-demo` runner online with Docker available, then capture the successful deployment logs, final workflow result, and running application. If submitting the Jenkins implementation, also capture its execution evidence:
 
 1. GitHub repository files and Jenkinsfile.
 2. Jenkins job configuration, repository URL, branch, and trigger.
@@ -60,7 +75,7 @@ Save real screenshots with captions and build numbers:
 
 Record commit SHA, build number, timestamps, agent, results, and deployed URL. Use `git log --oneline` for commit evidence. Exclude credentials from screenshots. Local tests do not prove a Jenkins run.
 
-Use [the workflow report template](docs/workflow-report.md), add measured results and screenshots, and export it to PDF/Word in your editor.
+The [workflow report](docs/workflow-report.md) records the supplied evidence. Add the remaining deployment/Jenkins results when available and export it to PDF/Word in your editor.
 
 ## Official references
 - [Jenkins Pipeline](https://www.jenkins.io/doc/book/pipeline/)
